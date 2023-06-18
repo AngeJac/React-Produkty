@@ -1,9 +1,15 @@
 import React from 'react';
 import commonColumnsStyles from '../../common/styles/Columns.module.scss';
 import { useSelector, useDispatch } from 'react-redux';
-import { setSelectedProduct, setProductsLoadingState } from '../../redux/productsSlice';
+import {
+	setSelectedProduct,
+	setProductsLoadingState,
+	setShoppingProductsLoadingState,
+	loadShoppingList,
+} from '../../redux/productsSlice';
 import axios from 'axios';
 import { CircularProgress } from '@mui/material';
+import { uniqueId } from 'lodash';
 
 function ProductsList() {
 	const productsList = useSelector(state => state.products.productsList);
@@ -20,22 +26,34 @@ function ProductsList() {
 			dispatch(setProductsLoadingState('error'));
 		}
 	};
+
+	const addProductShoppingList = async product => {
+		try {
+			dispatch(setShoppingProductsLoadingState('loading'));
+			await axios.post(`http://localhost:9000/products/shoppingList/new`, {
+				...product,
+				id: uniqueId() + Date.now(),
+			});
+			const responseShoppingList = await axios.get(`http://localhost:9000/products/shoppingList`);
+			dispatch(loadShoppingList(responseShoppingList.data));
+			dispatch(setShoppingProductsLoadingState('success'));
+		} catch (error) {
+			console.log(error);
+		}
+	};
+
 	return (
 		<div className={commonColumnsStyles.AppColumn}>
 			<header className={commonColumnsStyles.AppHeader}>
 				<p>Products list</p>
-				{loadingStatus === 'loading' ? (
-					<CircularProgress />
-				) : productsList.length > 0 ? (
-					productsList.map(product => (
-						<span onClick={() => handleItemClick(product)}>
-							{' '}
-							{product.name} {product.id}{' '}
-						</span>
-					))
-				) : (
-					'no products to display'
-				)}
+				{productsList.length > 0
+					? productsList.map(product => (
+							<span onClick={() => addProductShoppingList(product)}>
+								{' '}
+								{product.id} {product.name} {loadingStatus === 'Adding product' ? <CircularProgress /> : ''}
+							</span>
+					  ))
+					: 'no products to display'}
 				{/* Poniżej znajduje się ostylowany aktywny produkt do zadania 5 */}
 				{/* <span
           style={{
