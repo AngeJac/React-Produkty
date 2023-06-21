@@ -1,31 +1,15 @@
 import React from 'react';
 import commonColumnsStyles from '../../common/styles/Columns.module.scss';
 import { useSelector, useDispatch } from 'react-redux';
-import {
-	setSelectedProduct,
-	setProductsLoadingState,
-	setShoppingProductsLoadingState,
-	loadShoppingList,
-} from '../../redux/productsSlice';
-import axios from 'axios';
+import { setShoppingProductsLoadingState, loadShoppingList } from '../../redux/productsSlice';
 import { CircularProgress } from '@mui/material';
+import axios from 'axios';
 import { uniqueId } from 'lodash';
 
 function ProductsList() {
-	const productsList = useSelector(state => state.products.productsList);
+	const productsList = useSelector(state => state.products.filteredProductsList);
 	const loadingStatus = useSelector(state => state.products.productsLoadingState);
 	const dispatch = useDispatch();
-
-	const handleItemClick = async product => {
-		try {
-			dispatch(setProductsLoadingState('loading'));
-			const responseProd = await axios.get(`http://localhost:9000/products/${product.id}`);
-			dispatch(setSelectedProduct(responseProd.data));
-			dispatch(setProductsLoadingState('success'));
-		} catch (error) {
-			dispatch(setProductsLoadingState('error'));
-		}
-	};
 
 	const addProductShoppingList = async product => {
 		try {
@@ -38,7 +22,7 @@ function ProductsList() {
 			dispatch(loadShoppingList(responseShoppingList.data));
 			dispatch(setShoppingProductsLoadingState('success'));
 		} catch (error) {
-			console.log(error);
+			console.log(`something went wrong: ${error}`);
 		}
 	};
 
@@ -48,9 +32,10 @@ function ProductsList() {
 				<p>Products list</p>
 				{productsList.length > 0
 					? productsList.map(product => (
-							<span onClick={() => addProductShoppingList(product)}>
+							<span key={product.id} onClick={() => addProductShoppingList(product)}>
 								{' '}
-								{product.id} {product.name} {loadingStatus === 'Adding product' ? <CircularProgress /> : ''}
+								{product.id} {product.name}
+								{loadingStatus === 'Adding product' ? <CircularProgress /> : ''}
 							</span>
 					  ))
 					: 'no products to display'}

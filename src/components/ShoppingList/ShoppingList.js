@@ -8,22 +8,21 @@ import { CircularProgress } from '@mui/material';
 
 function ShoppingList() {
 	const shoppingList = useSelector(state => state.products.shoppingList);
-	const loadingStatus = useSelector(state => state.products.productsLoadingState);
+	const loadingStatus = useSelector(state => state.products.shoppingProductsLoadingState);
 	const [deleteProductId, setDeleteProductId] = useState(0);
 	const dispatch = useDispatch();
 
-	const getShoppingListFromApi = async () => {
-		try {
-			const responseShoppingList = await axios.get(`http://localhost:9000/products/shoppingList`);
-			dispatch(loadShoppingList(responseShoppingList.data));
-		} catch (error) {
-			console.log(error);
-		}
-	};
-
 	useEffect(() => {
+		async function getShoppingListFromApi() {
+			try {
+				const responseShoppingList = await axios.get(`http://localhost:9000/products/shoppingList`);
+				dispatch(loadShoppingList(responseShoppingList.data));
+			} catch (error) {
+				console.log(error);
+			}
+		}
 		getShoppingListFromApi();
-	}, [getShoppingListFromApi]);
+	}, [dispatch]);
 
 	const deleteProductFromShoppingList = async product => {
 		try {
@@ -46,7 +45,8 @@ function ShoppingList() {
 					? shoppingList.map((product, index) => (
 							<span onClick={() => deleteProductFromShoppingList(product, index)}>
 								{' '}
-								{index + 1} {product.name} {loadingStatus === 'Removing product' ? <CircularProgress /> : ''}
+								{index + 1} {product.name}{' '}
+								{loadingStatus === 'Removing product' && product.id === deleteProductId ? <CircularProgress /> : ''}
 							</span>
 					  ))
 					: 'no products to display'}
